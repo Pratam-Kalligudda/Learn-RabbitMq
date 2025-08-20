@@ -21,3 +21,13 @@ func FailOnError(err error, msg string) {
 		log.Panicf("%s: %s", msg, err)
 	}
 }
+
+func SeverityFrom(args []string) string {
+	var s string
+	if len(args) < 2 || os.Args[1] == "" {
+		s = "info"
+	} else {
+		s = os.Args[1]
+	}
+	return s
+}
