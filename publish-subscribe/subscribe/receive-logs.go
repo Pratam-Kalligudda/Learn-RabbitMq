@@ -17,17 +17,36 @@ func main() {
 	utils.FailOnError(err, "error while creating channel")
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"hello",
-		false,
+	err = ch.ExchangeDeclare(
+		"logs",
+		"fanout",
+		true,
 		false,
 		false,
 		false,
 		nil,
 	)
+	utils.FailOnError(err, "error while creating exchange")
+
+	q, err := ch.QueueDeclare(
+		"",
+		false,
+		false,
+		true,
+		false,
+		nil,
+	)
 	utils.FailOnError(err, "error while creating queue")
 
-	var forever chan struct{}
+	err = ch.QueueBind(
+		q.Name,
+		"",
+		"logs",
+		false,
+		nil,
+	)
+	utils.FailOnError(err, "error while binding exchange with queue")
+
 	msgs, err := ch.Consume(
 		q.Name,
 		"",
@@ -37,11 +56,14 @@ func main() {
 		false,
 		nil,
 	)
+	var forever chan struct{}
+
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
+			log.Printf(" [x] %s", d.Body)
 		}
 	}()
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+
+	log.Printf(" [*] Waiting for logs. To exit press CLRT+C")
 	<-forever
 }

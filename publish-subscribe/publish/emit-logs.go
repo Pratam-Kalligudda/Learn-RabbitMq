@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -19,24 +20,25 @@ func main() {
 	utils.FailOnError(err, "error while creating channel")
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"hello",
-		false,
+	err = ch.ExchangeDeclare(
+		"logs",
+		"fanout",
+		true,
 		false,
 		false,
 		false,
 		nil,
 	)
-	utils.FailOnError(err, "error while creating queue")
+	utils.FailOnError(err, "error while creating exchange")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	body := "hello world"
+	body := utils.BodyFrom(os.Args)
 
 	err = ch.PublishWithContext(ctx,
+		"logs",
 		"",
-		q.Name,
 		false,
 		false,
 		amqp.Publishing{
@@ -44,6 +46,7 @@ func main() {
 			Body:        []byte(body),
 		},
 	)
-	utils.FailOnError(err, "error while publishing content to server")
-	log.Printf(" [x] Sent %s\n", body)
+	utils.FailOnError(err, "error while publishing content to exchange")
+
+	log.Println(" [x] Sent " + body)
 }

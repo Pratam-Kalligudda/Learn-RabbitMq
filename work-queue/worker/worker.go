@@ -6,21 +6,17 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-)
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s : %s", msg, err.Error())
-	}
-}
+	"github.com/Pratam-Kalligudda/Learn-RabbitMq/utils"
+)
 
 func main() {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	failOnError(err, "error while connecting to rabbitmq server")
+	utils.FailOnError(err, "error while connecting to rabbitmq server")
 	defer conn.Close()
 
 	ch, err := conn.Channel()
-	failOnError(err, "error while creating channel")
+	utils.FailOnError(err, "error while creating channel")
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
@@ -31,10 +27,10 @@ func main() {
 		false,
 		nil,
 	)
-	failOnError(err, "error while creating queue")
+	utils.FailOnError(err, "error while creating queue")
 
 	err = ch.Qos(1, 0, false)
-	failOnError(err, "error while setting Qos")
+	utils.FailOnError(err, "error while setting Qos")
 
 	msgs, err := ch.Consume(
 		q.Name,
